@@ -19,8 +19,8 @@ var outerGame = {
 }
 
 /**
- * 
- * @param {*} props 
+ *
+ * @param {*} props
  */
 function Square(props) {
   const classname = "square ".concat(props.name);
@@ -43,13 +43,13 @@ class Board extends React.Component {
   }
 
   /**
-   * 
-   * @param {int} i 
+   *
+   * @param {int} i
    */
   handleClick(innerGameId, squareNum) {
-    var outerGame = this.state.outerGame; 
-    if (outerGame.winner 
-      || outerGame.innerGames[innerGameId].winner 
+    var outerGame = this.state.outerGame;
+    if (outerGame.winner
+      || outerGame.innerGames[innerGameId].winner
       || outerGame.innerGames[innerGameId].squares[squareNum]){
         return; //do nothing if shouldnt be able to click this button anymore
       }
@@ -59,6 +59,7 @@ class Board extends React.Component {
     //then check if we have a winner after this current move
     const innerWinner = calcInnerWinner(outerGame.innerGames[innerGameId].squares);
     if (innerWinner) {
+      disableInnerGame(innerGameId, innerWinner);
       outerGame.innerGames[innerGameId].winner = innerWinner;
       //increment outerGame winner count AND
       //check for out game winner if at least 3 inner games have been won
@@ -98,7 +99,6 @@ class Board extends React.Component {
       status = 'Next player: ' + (this.state.xIsNext ? 'X' : 'O');
     }
 
-    // 
     var spans = [];
     for (var i = 0; i < 9; i++) {
       // each push is an inner game
@@ -121,14 +121,16 @@ class Board extends React.Component {
           </div>
         </span>
       )
-      // spans.push(<span class='vertical-line'/>)
+      const winnerName = "winner-".concat(i);
+      spans.push(<span id={winnerName} className="winner-marker"></span>)
+
       if (i % 3 === 2) {
         spans.push(<div></div>);
       }
     }
 
     return (
-      <div>
+      <div class="game-board">
         <div className="status">
           {status}
         </div>
@@ -142,7 +144,7 @@ class Game extends React.Component {
   render() {
     return (
       <div className="game">
-        <div className="game-board">
+        <div>
           <Board />
         </div>
       </div>
@@ -152,15 +154,15 @@ class Game extends React.Component {
 
 ReactDOM.render(
   <Game />,
-  document.getElementById('root') 
+  document.getElementById('root')
   );
 
-// ==========================================  
+// ==========================================
 // ||           HELPER FUNCTIONS           ||
 // ==========================================
 /**
- * Calculate the winner of an inner game 
- * @param {array} innerGameSquares 
+ * Calculate the winner of an inner game
+ * @param {array} innerGameSquares
  */
 function calcInnerWinner(innerGameSquares) {
   // possible winning scenarios
@@ -187,7 +189,7 @@ function calcInnerWinner(innerGameSquares) {
 
 /**
  * Calculate the winner of the outer game, OVERALL WINNER
- * @param {*} number 
+ * @param {*} number
  */
 function calcOuterWinner(outerGame){
   const lines = [
@@ -204,8 +206,8 @@ function calcOuterWinner(outerGame){
   for (let i = 0; i < lines.length; i++) {
     const [a, b, c] = lines[i];
     // short circuiting check if postions in winning scenario are all X or all O
-    if (outerGame.innerGames[a].winner 
-      && outerGame.innerGames[a].winner  === outerGame.innerGames[b].winner  
+    if (outerGame.innerGames[a].winner
+      && outerGame.innerGames[a].winner  === outerGame.innerGames[b].winner
       && outerGame.innerGames[a].winner  === outerGame.innerGames[c].winner ) {
       return outerGame.innerGames[a].winner; // if was a winner return 'X' or 'O'
     }
@@ -214,10 +216,22 @@ function calcOuterWinner(outerGame){
 
 }
 
+function disableInnerGame(gameId, winner) {
+  const nodes = document.getElementById(getGameId(gameId)).getElementsByTagName('*');
+  console.log(nodes);
+  for (var i = 0; i < nodes.length; i++) {
+    nodes[i].disabled = true;
+  }
+  const winnerId = "winner-".concat(gameId);
+  const winnerMarker = document.getElementById(winnerId);
+  winnerMarker.textContent = winner;
+  winnerMarker.style.visibility = "visible";
+}
+
 /**
  * Helper method for getting word/string version of a number for the id of spans
  * Takes int, returns word equivalent
- * @param {int} number 
+ * @param {int} number
  */
 function getGameId(number) {
   var ids = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight'];

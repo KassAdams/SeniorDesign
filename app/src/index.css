@@ -36,6 +36,11 @@ span {
   width: 34px;
 }
 
+.square:disabled {
+  background: #cccccc;
+  border-color: #adadad;
+}
+
 .zero, .three, .six {
   border-left: none;
 }
@@ -52,6 +57,30 @@ span {
   border-bottom: none;
 }
 
+#zero, #winner-0, #one, #winner-1, #two, #winner-2 {
+  grid-row: 2;
+}
+
+#three, #winner-3, #four, #winner-4, #five, #winner-5 {
+  grid-row: 3;
+}
+
+#six, #winner-6, #seven, #winner-7, #eight, #winner-8 {
+  grid-row: 4;
+}
+
+#zero, #winner-0, #three, #winner-3, #six, #winner-6 {
+  grid-column: 1;
+}
+
+#one, #winner-1, #four, #winner-4, #seven, #winner-7 {
+  grid-column: 2;
+}
+
+#two, #winner-2, #five, #winner-5, #eight, #winner-8 {
+  grid-column: 3;
+}
+
 .square:focus {
   outline: none;
 }
@@ -65,11 +94,17 @@ span {
   flex-direction: row;
 }
 
-.single-game {
-  padding: 10px;
+.game-board {
+  display: grid;
+  text-align: center;
 }
 
-/* .vertical-line {
-  border: 2px solid gray;
-  height: 100px;
-} */
+.single-game {
+  margin: 10px;
+  text-align: center;
+}
+
+.winner-marker {
+  visibility: hidden;
+  font-size: 100px;
+}
