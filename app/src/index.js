@@ -3,20 +3,33 @@ import ReactDOM from 'react-dom';
 import './index.css';
 
 var outerGame = {
-  innerGames: [
-    {id: 0, squares: Array(9).fill(null), winner: null},
-    {id: 1, squares: Array(9).fill(null), winner: null},
-    {id: 2, squares: Array(9).fill(null), winner: null},
-    {id: 3, squares: Array(9).fill(null), winner: null},
-    {id: 4, squares: Array(9).fill(null), winner: null},
-    {id: 5, squares: Array(9).fill(null), winner: null},
-    {id: 6, squares: Array(9).fill(null), winner: null},
-    {id: 7, squares: Array(9).fill(null), winner: null},
-    {id: 8, squares: Array(9).fill(null), winner: null}
+  innerGames: [                                          // Row-Col
+    {id: 0, squares: Array(9).fill(null), winner: null}, // Top-Left
+    {id: 1, squares: Array(9).fill(null), winner: null}, // Top-Center
+    {id: 2, squares: Array(9).fill(null), winner: null}, // Top-Right
+    {id: 3, squares: Array(9).fill(null), winner: null}, // Mid-Left
+    {id: 4, squares: Array(9).fill(null), winner: null}, // Mid-Center
+    {id: 5, squares: Array(9).fill(null), winner: null}, // Mid-Right
+    {id: 6, squares: Array(9).fill(null), winner: null}, // Bot-Left
+    {id: 7, squares: Array(9).fill(null), winner: null}, // Bot-Center
+    {id: 8, squares: Array(9).fill(null), winner: null}  // Bot-Right
   ],
   innerGamesWon: 0,
-  winner: null
+  winner: null,
+  activeInnerGameId: 99 // to denote all games not yet won should be active/open for clicks
 }
+
+  // possible winning scenarios
+  const winScenarios = [
+    [0, 1, 2], // top row
+    [3, 4, 5], // middle row
+    [6, 7, 8], // bottom row
+    [0, 3, 6], // left column
+    [1, 4, 7], // middle column
+    [2, 5, 8], // right column
+    [0, 4, 8], // top-left to bottom-right
+    [2, 4, 6], // top-right to bottom-left
+  ];
 
 /**
  * 
@@ -36,28 +49,37 @@ class Board extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      //squares is the array that represents the big/outer game?
       outerGame: outerGame,
       xIsNext: true,
     };
   }
 
   /**
-   * 
-   * @param {int} i 
+   * Handles a move by a player determining if its valid, then if a win, then next valid innerGame
+   * @param {int} innerGameId The game that was played in
+   * @param {int} squareNum The square in the game clicked
    */
   handleClick(innerGameId, squareNum) {
     var outerGame = this.state.outerGame; 
-    if (outerGame.winner 
-      || outerGame.innerGames[innerGameId].winner 
-      || outerGame.innerGames[innerGameId].squares[squareNum]){
+
+    if (//NOT the current active inner game AND NOT a free move?
+        (innerGameId !== outerGame.activeInnerGameId && outerGame.activeInnerGameId !== 99) 
+  //SOME CHECKS BELOW THIS COMMENT MAY BE UNNECESSARY BASED ON LOGIC OF activeGameId, WILL TEST ONCE WORKING
+        ||outerGame.winner //outer game won
+        || outerGame.innerGames[innerGameId].winner //this inner game is won
+        || outerGame.innerGames[innerGameId].squares[squareNum] //this inner game square already taken
+      ){
+        console.log("INVALID MOVE: innerGameId="+innerGameId+", activeInnerGameId="+outerGame.activeInnerGameId)
         return; //do nothing if shouldnt be able to click this button anymore
       }
-    console.log("gameNum:"+innerGameId+" squareNum:"+squareNum)
+
+    console.log("VALID MOVE: gameNum="+innerGameId+", squareNum="+squareNum)
+ 
     //update the square that was clicked first
     outerGame.innerGames[innerGameId].squares[squareNum] = this.state.xIsNext ? 'X' : 'O';
     //then check if we have a winner after this current move
     const innerWinner = calcInnerWinner(outerGame.innerGames[innerGameId].squares);
+    //if we did have an inner winner, set it
     if (innerWinner) {
       outerGame.innerGames[innerGameId].winner = innerWinner;
       //increment outerGame winner count AND
@@ -65,12 +87,20 @@ class Board extends React.Component {
       if (++outerGame.innerGamesWon>2){
         outerGame.winner = calcOuterWinner(outerGame);
       }
-      //return;
     }
+
+    //check that the new activeGame is not already won, set the next activeInnerGameId
+    if(outerGame.innerGames[squareNum].winner){
+      outerGame.activeInnerGameId=99;//next move is a free move
+    }else{
+      outerGame.activeInnerGameId=squareNum;
+    }
+
+    console.log("UPDATED: activeGameId="+squareNum)
 
     this.setState({
       outerGame: outerGame,
-      xIsNext: !this.state.xIsNext,
+      xIsNext: !this.state.xIsNext, //flip the turn to the next player
     });
   }
 
@@ -163,20 +193,9 @@ ReactDOM.render(
  * @param {array} innerGameSquares 
  */
 function calcInnerWinner(innerGameSquares) {
-  // possible winning scenarios
-  const lines = [
-    [0, 1, 2], // top row
-    [3, 4, 5], // middle row
-    [6, 7, 8], // bottom row
-    [0, 3, 6], // left column
-    [1, 4, 7], // middle column
-    [2, 5, 8], // right column
-    [0, 4, 8], // top-left to bottom-right
-    [2, 4, 6], // top-right to bottom-left
-  ];
   //for each winning scenario
-  for (let i = 0; i < lines.length; i++) {
-    const [a, b, c] = lines[i];
+  for (let i = 0; i < winScenarios.length; i++) {
+    const [a, b, c] = winScenarios[i];
     // short circuiting check if postions in winning scenario are all X or all O
     if (innerGameSquares[a] && innerGameSquares[a] === innerGameSquares[b] && innerGameSquares[a] === innerGameSquares[c]) {
       return innerGameSquares[a]; // if was a winner return 'X' or 'O'
@@ -187,22 +206,12 @@ function calcInnerWinner(innerGameSquares) {
 
 /**
  * Calculate the winner of the outer game, OVERALL WINNER
- * @param {*} number 
+ * @param {*} outerGame 
  */
 function calcOuterWinner(outerGame){
-  const lines = [
-    [0, 1, 2], // top row
-    [3, 4, 5], // middle row
-    [6, 7, 8], // bottom row
-    [0, 3, 6], // left column
-    [1, 4, 7], // middle column
-    [2, 5, 8], // right column
-    [0, 4, 8], // top-left to bottom-right
-    [2, 4, 6], // top-right to bottom-left
-  ];
-
-  for (let i = 0; i < lines.length; i++) {
-    const [a, b, c] = lines[i];
+  //for each winning scenario
+  for (let i = 0; i < winScenarios.length; i++) {
+    const [a, b, c] = winScenarios[i];
     // short circuiting check if postions in winning scenario are all X or all O
     if (outerGame.innerGames[a].winner 
       && outerGame.innerGames[a].winner  === outerGame.innerGames[b].winner  
