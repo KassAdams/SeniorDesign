@@ -69,11 +69,9 @@ class Board extends React.Component {
         || outerGame.innerGames[innerGameId].winner //this inner game is won
         || outerGame.innerGames[innerGameId].squares[squareNum] //this inner game square already taken
       ){
-        console.log("INVALID MOVE: innerGameId="+innerGameId+", activeInnerGameId="+outerGame.activeInnerGameId)
         return; //do nothing if shouldnt be able to click this button anymore
       }
 
-    console.log("VALID MOVE: gameNum="+innerGameId+", squareNum="+squareNum)
  
     //update the square that was clicked first
     outerGame.innerGames[innerGameId].squares[squareNum] = this.state.xIsNext ? 'X' : 'O';
@@ -95,8 +93,6 @@ class Board extends React.Component {
     }else{
       outerGame.activeInnerGameId=squareNum;
     }
-
-    console.log("UPDATED: activeGameId="+squareNum)
 
     this.setState({
       outerGame: outerGame,
